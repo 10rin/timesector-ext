@@ -1,0 +1,396 @@
+:root {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; /* 英字フォントはヘルベチカ */
+  line-height: 1.6;
+  font-weight: 400;
+
+  color-scheme: light;
+  color: #000000;
+  background-color: #ffffff;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* コントロールパネル: ロゴのみ */
+#info-panel {
+  position: relative;
+  width: 100%;
+  background: transparent;
+  padding: 32px 32px 0px 32px;
+  z-index: 10;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+/* ヘッダー: timesectorロゴ (スリム化) */
+#info-panel h1 {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #000000;
+  text-transform: lowercase;
+  line-height: 1;
+}
+
+/* ビュー内のフローティングヘッダーセクション */
+.view-header {
+  position: absolute;
+  top: 16px;
+  left: 24px;
+  right: 24px;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none; /* Canvasのドラッグイベントを透過 */
+}
+
+.view-title {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: lowercase;
+  letter-spacing: 0.05em;
+  color: rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.view-controls {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+  pointer-events: auto; /* ボタンはクリック可能にする */
+}
+
+.view-controls button {
+  padding: 8px !important;
+  width: 44px !important;
+  height: 44px !important;
+  flex: none !important;
+}
+
+/* 各セクションの説明文 */
+/* .section-desc {
+  font-size: px;
+  line-height: 1.6;
+  margin: 0;
+  color: rgba(0, 0, 0, 0.7);
+} */
+
+/* セクションの見出し */
+.section-title {
+  display: inline-block;
+  font-size: 30px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: rgba(0, 0, 0, 0.4);
+  font-weight: 700;
+  margin-bottom: 0;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.btn-group {
+  display: flex;
+  gap: 8px;
+}
+
+/* ボタン: 背景色の塗りなし、枠線なし、丸みなし */
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 10px 16px;
+  border: none !important;
+  background-color: transparent; /* 背景色は塗らない */
+  background: none;
+  color: rgba(0, 0, 0, 0.4); /* 通常時は文字を少し薄くして存在感を抑える */
+  border-radius: 0; /* 丸みはなし */
+  cursor: pointer;
+  font-weight: 400; /* 通常時は標準ウェイト */
+  font-size: 20px;
+  transition: color 0.15s ease, font-weight 0.15s ease;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+button:hover {
+  background-color: transparent; /* ホバー時も色は塗らない */
+  color: rgba(0, 0, 0, 0.85); /* ホバー時は文字を少し明るく */
+}
+
+/* アクティブなボタン: 枠線なし・背景色なし、テキストの太字(bold)で明示 */
+button.active {
+  background-color: transparent; /* アクティブ時も色は塗らない */
+  color: #000000; /* アクティブ時は黒 */
+  font-weight: 800; /* 選択中は太字(bold)で明示 */
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+button:focus,
+button:focus-visible,
+button:active {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+button:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+  background-color: transparent;
+  color: rgba(0, 0, 0, 0.2);
+}
+
+
+
+.viewer-workspace {
+  flex: 1;
+  position: relative;
+  width: 100vw;
+  min-height: 0;
+}
+
+/* 2画面分割レイアウト */
+#canvas-container {
+  width: 50vw;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+#canvas-container.mode-rotate {
+  cursor: grab;
+}
+
+#canvas-container.mode-rotate:active {
+  cursor: grabbing;
+}
+
+#canvas-container.mode-draw,
+#canvas-container.mode-greasePencil {
+  cursor: crosshair;
+}
+
+.view-divider {
+  position: absolute;
+  top: 0;
+  left: 50vw;
+  width: 0.5px;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.2); /* 0.5px of 黒線デバイダー */
+  z-index: 5; /* WebGL Canvasの上に確実に描画 */
+  pointer-events: none;
+}
+
+#preview-container {
+  width: 50vw;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 50vw;
+  z-index: 1;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#preview-canvas {
+  width: 100%;
+  height: 85%;
+  object-fit: contain;
+  border-radius: 0; /* 丸みはなし */
+  image-rendering: auto;
+}
+
+/* プレミアム・カスタムツールチップ */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: -36px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-5px);
+  padding: 6px 10px;
+  background-color: rgba(0, 0, 0, 0.85);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+  pointer-events: none;
+  z-index: 1000;
+  text-transform: none; /* 大文字化の無効化 */
+}
+
+[data-tooltip]:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* スキャニングプログレスバー (黒線のみ) */
+.scan-progress-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  width: 140px;
+}
+
+.scan-progress-text {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.7);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.scan-progress-container {
+  width: 100%;
+  height: 1px; /* 1pxの極細の線にする */
+  background-color: rgba(0, 0, 0, 0.1); /* 未進捗部分は薄いグレーの線 */
+  position: relative;
+  overflow: hidden;
+}
+
+.scan-progress-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background-color: #000000; /* 進捗部分は黒線 */
+  transition: width 0.1s ease;
+}
+
+/* モーダルウィンドウのスタイル */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(255, 255, 255, 0.85); /* 白ベースの透過背景 */
+  backdrop-filter: blur(20px); /* 背後をぼかす */
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 0px; /* ミニマルデザインのため丸みなし */
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  width: 90%;
+  max-width: 640px;
+}
+
+.modal-content h2 {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.4);
+  margin: 0;
+}
+
+.modal-video-wrapper {
+  width: 100%;
+  max-height: 55vh;
+  background: transparent;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 0.5px solid rgba(0, 0, 0, 0.15);
+}
+
+.modal-preview-video {
+  max-width: 100%;
+  max-height: 55vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.btn-slit-scan-go {
+  margin-top: 16px;
+  padding: 14px 28px !important;
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.btn-slit-scan-go:hover {
+  background-color: #333333 !important;
+  opacity: 0.9;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ポップアウト展開時の全画面Volumeレイアウト */
+.viewer-workspace.popout-active #canvas-container {
+  width: 100vw;
+}
+
+.viewer-workspace.popout-active #preview-container {
+  position: absolute;
+  left: -9999px;
+  visibility: hidden;
+}
+
+.viewer-workspace.popout-active .view-divider {
+  display: none;
+}
